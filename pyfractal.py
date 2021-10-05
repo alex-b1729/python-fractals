@@ -24,6 +24,9 @@
 # https://matplotlib.org/stable/gallery/showcase/mandelbrot.html#sphx-glr-gallery-showcase-mandelbrot-py
 # https://stackoverflow.com/questions/24185083/change-resolution-of-imshow-in-ipython
 # https://pythoninformer.com/generative-art/fractals/burning-ship/
+# https://mathematica.stackexchange.com/questions/89458/how-to-make-a-nebulabrot
+# http://www.steckles.com/buddha/
+
 
 import os
 import sys
@@ -34,13 +37,13 @@ import matplotlib.pyplot as plt
 import matplotlib.image as pmimg
 from time import perf_counter
 
-def in_julia_set(c, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2):
+def in_julia_set(imag_var, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2):
     """Return Julia set matrix"""
     X = np.linspace(xmin, xmax, xn).astype(np.float32)
     Y = np.linspace(ymin, ymax, yn).astype(np.float32)
     Z = X + Y[:, None] * 1j
     N = np.zeros_like(Z, dtype=int)
-    C = np.ones_like(Z, dtype=np.cdouble) * c
+    C = np.ones_like(Z, dtype=np.cdouble) * imag_var
     for n in range(iterations):
         I = abs(Z) < bound
         N[I] = n
@@ -48,8 +51,23 @@ def in_julia_set(c, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2):
     # N[N == iterations-1] = 0
     return N
 
-def in_mandelbrot_set(z, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2):
+def in_burning_ship_set(imag_var, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2):
     """Return Mandelbrot set matrix"""
+    X = np.linspace(xmin, xmax, xn).astype(np.float32)
+    Y = np.linspace(ymin, ymax, yn).astype(np.float32)
+    C = X + Y[:, None] * 1j
+    N = np.zeros_like(C, dtype=int)
+    Z = np.zeros_like(C)
+    for n in range(iterations):
+        I = abs(Z) < bound
+        N[I] = n
+        Z[I] = (np.abs(Z[I].real) + np.abs(Z[I].imag) * 1j)**2 + C[I]
+        # Z[I] = Z[I]**2 + C[I]
+    # N[N == iterations-1] = 0
+    return N
+
+def in_mandelbrot_set(imag_var, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2):
+    """Return Burning Ship set matrix"""
     X = np.linspace(xmin, xmax, xn).astype(np.float32)
     Y = np.linspace(ymin, ymax, yn).astype(np.float32)
     C = X + Y[:, None] * 1j
@@ -63,15 +81,33 @@ def in_mandelbrot_set(z, xmin, xmax, ymin, ymax, xn, yn, iterations=100, bound=2
     return N
 
 def gen_fractal(iterations=100, bound=2, fract_name='julia'):
-    resolution = 0.01
-    img_width = 1.65
     save_fig = True
-    fract_name = 'mandelbrot'
-
-    c = complex(-0.835, -0.211)
-
+    fract_name = 'burning-ship'
+    
+    if fract_name=='julia':
+        xmin = -2
+        xmax = 2
+        ymin = -2
+        ymax = 2
+        imag_var = complex(-0.835, -0.211)
+        fractal_func = in_julia_set
+    elif fract_name=='mandelbrot':
+        xmin = -2
+        xmax = 2
+        ymin = -2
+        ymax = 2
+        imag_var = 0
+        fractal_func = in_mandelbrot_set
+    elif fract_name=='burning-ship':
+        xmin = -1.8
+        xmax = -1.7
+        ymin = -.1
+        ymax = .02
+        imag_var = 0
+        fractal_func = in_burning_ship_set
+    
     t0 = perf_counter()
-    N = in_julia_set(c=c, xmin=-img_width, xmax=img_width, ymin=-img_width, ymax=img_width, xn=2000, yn=2000)
+    N = fractal_func(imag_var=imag_var, xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, xn=2000, yn=2000)
     t1 = perf_counter()
     print(t1-t0)
     
@@ -82,18 +118,14 @@ def gen_fractal(iterations=100, bound=2, fract_name='julia'):
     # ax = fig.add_axes([0,0,1,1], frame_on=False, aspect=1)
     # plt.axis('off')
     # ax.imshow(N, extent=[-img_width, img_width, -img_width, img_width], interpolation='bilinear', cmap='bone_r')
-    # abc.savefig(f'/Users/abrefeld/Desktop/fractal_pics/{fract_name}.png', dpi=1024, format='png')
+    # fig.savefig(f'/Users/abrefeld/Desktop/fractal_pics/{fract_name}.png', dpi=1024, format='png')
     
     plt.axis('off')
-    plt.imshow(N, extent=[-img_width, img_width, -img_width, img_width], interpolation='bilinear', cmap='bone_r')
+    # plt.imshow(N, extent=[-img_width, img_width, -img_width, img_width], interpolation=None, cmap='twilight_shifted_r')
+    plt.imshow(N, extent=[xmin, xmax, ymin, ymax], interpolation=None, cmap='twilight_shifted_r')
     if save_fig: 
         plt.savefig(f'/Users/abrefeld/Desktop/fractal_pics/{fract_name}.png', dpi=1024, format='png', bbox_inches='tight')
 
-    # img = plt.imshow(vis_matrix, cmap='bone_r')
-    # plt.axis('off')
-    # if save_fig:
-    #     plt.savefig(f'/Users/abrefeld/Desktop/fractal_pics/{fract_name}.png', dpi=1024, format='png', bbox_inches='tight')
-    # plt.show()
 
 
 
