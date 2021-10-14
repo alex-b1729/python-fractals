@@ -42,7 +42,7 @@ import matplotlib.image as pmimg
 def in_julia_set(fract_params, xn, yn, iterations=100, bound=2):
     """Return Julia set matrix"""
     X = np.linspace(fract_params.xmin, fract_params.xmax, xn).astype(np.float32)
-    Y = np.linspace(fract_params.ymax, fract_params.ymin, yn).astype(np.float32)
+    Y = np.linspace(fract_params.ymin, fract_params.ymax, yn).astype(np.float32)
     Z = X + Y[:, None] * 1j
     N = np.zeros_like(Z, dtype=int)
     C = np.ones_like(Z, dtype=np.cdouble) * fract_params.c
@@ -55,7 +55,7 @@ def in_julia_set(fract_params, xn, yn, iterations=100, bound=2):
 def in_burning_ship_set(fract_params, xn, yn, iterations=100, bound=2):
     """Return Mandelbrot set matrix"""
     X = np.linspace(fract_params.xmin, fract_params.xmax, xn).astype(np.float32)
-    Y = np.linspace(fract_params.ymax, fract_params.ymin, yn).astype(np.float32)
+    Y = np.linspace(fract_params.ymin, fract_params.ymax, yn).astype(np.float32)
     C = X + Y[:, None] * 1j
     N = np.zeros_like(C, dtype=int)
     Z = np.zeros_like(C)
@@ -69,7 +69,7 @@ def in_burning_ship_set(fract_params, xn, yn, iterations=100, bound=2):
 def in_mandelbrot_set(fract_params, xn, yn, iterations=100, bound=2):
     """Return Burning Ship set matrix"""
     X = np.linspace(fract_params.xmin, fract_params.xmax, xn).astype(np.float32)
-    Y = np.linspace(fract_params.ymax, fract_params.ymin, yn).astype(np.float32)
+    Y = np.linspace(fract_params.ymin, fract_params.ymax, yn).astype(np.float32)
     C = X + Y[:, None] * 1j
     N = np.zeros_like(C, dtype=int)
     Z = np.zeros_like(C)
@@ -98,14 +98,14 @@ def gen_fractal(fract_params, iterations=100, bound=2):
     """Generate fractal set"""
 
     # info to terminal
-    print('Generating', fract_params.fract_name, 'set')
+    print('Fractal:', fract_params.fract_name.capitalize(), 'set')
     print('Matplotlib color map:', fract_params.color_map)
 
     if fract_params.fract_name=='julia':
-        fract_params.xmin = -1.65
-        fract_params.xmax = 1.65
-        fract_params.ymin = -1.65
-        fract_params.ymax = 1.65
+        # fract_params.xmin = -1.65
+        # fract_params.xmax = 1.65
+        # fract_params.ymin = -1.65
+        # fract_params.ymax = 1.65
         # imag_var = complex(-0.835, -0.211)
         fract_params.c = complex(-0.82, -0.2)
         fractal_func = in_julia_set
@@ -114,10 +114,10 @@ def gen_fractal(fract_params, iterations=100, bound=2):
         # xmax = .6
         # ymin = -1.27
         # ymax = 1.27
-        fract_params.xmin = -.19
-        fract_params.xmax = -.13
-        fract_params.ymin = 1.01
-        fract_params.ymax = 1.06
+        # fract_params.xmin = -.19
+        # fract_params.xmax = -.13
+        # fract_params.ymin = 1.01
+        # fract_params.ymax = 1.06
         fract_params.c = 0
         fractal_func = in_mandelbrot_set
     elif fract_params.fract_name=='burning-ship':
@@ -129,27 +129,18 @@ def gen_fractal(fract_params, iterations=100, bound=2):
         # xmax = 2
         # ymin = -2
         # ymax = 2
-        fract_params.xmin = -1.84
-        fract_params.xmax = -1.54
-        fract_params.ymin = .05
-        fract_params.ymax = -.1
+        # fract_params.xmin = -1.84
+        # fract_params.xmax = -1.54
+        # fract_params.ymin = .05
+        # fract_params.ymax = -.1
         fract_params.c = 0
         fractal_func = in_burning_ship_set
 
     t0 = perf_counter()
-    N = fractal_func(fract_params, xn=2000, yn=2000)
+    N = fractal_func(fract_params, xn=1000, yn=1000)
     t1 = perf_counter()
     tot_time = round(t1-t0, 3)
     print('Total time:', tot_time, 'seconds')
-
-    # dpi = 1024
-    # width = 10
-    # height = 10
-    # fig = plt.figure(figsize=(width, height), dpi=dpi)
-    # ax = fig.add_axes([0,0,1,1], frame_on=False, aspect=1)
-    # plt.axis('off')
-    # ax.imshow(N, extent=[-img_width, img_width, -img_width, img_width], interpolation='bilinear', cmap='bone_r')
-    # fig.savefig(f'/Users/abrefeld/Desktop/fractal_pics/{fract_name}.png', dpi=1024, format='png')
 
     plt.axis('off')
     plt.imshow(N, extent=[fract_params.xmin, fract_params.xmax,
@@ -158,43 +149,59 @@ def gen_fractal(fract_params, iterations=100, bound=2):
 
     if fract_params.save_fig:
         unique_save = dt.datetime.today().strftime('%m%d%Y-%H%M%S')
-        plt.savefig(os.path.join(fract_params.cwd, f'{fract_params.fract_name}_{unique_save}.png'),
-                    dpi=2048, format='png', bbox_inches='tight')
+        save_path = os.path.join(fract_params.cwd, f'{fract_params.fract_name}_{unique_save}.png')
+        plt.savefig(save_path, dpi=1024, format='png', bbox_inches='tight')
+        print('Saved to:', save_path)
+        plt.show()
     else:
         plt.show()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fractal', help='Fractal name', type=str)
-parser.add_argument('-s', '--save', help='Save image', type=str)
-parser.add_argument('-c', '--colors', help='Matplotlib color map')
+parser.add_argument('-f', '--fractal', help='Fractal name', nargs='?', const='random')
+parser.add_argument('-s', '--save', help='Save image', nargs='?', const='working_dir')
+parser.add_argument('-c', '--colors', help='Matplotlib color map', nargs='?', const='random')
 parser.add_argument('-i', '--interpolation', help='Image interpolation')
+parser.add_argument('-x', '--center-point', help='Center of image in complex for: x+yj', type=complex, default=complex(0, 0))
+parser.add_argument('-w', '--width', help='Width of image', type=float, default=4)
 args = parser.parse_args()
 
 fract_params = Fract_Params()
 
 if args.fractal is not None:
-    fract_params.fract_name = args.fractal
+    if args.fractal != 'random':
+        fract_params.fract_name = args.fractal
+    else:
+        fract_params.fract_name = random.choices(['mandelbrot', 'julia', 'burning-ship'])[0]
 else:
-    fract_params.fract_name = random.choices(['mandelbrot', 'julia', 'burning-ship'])[0]
+    fract_params.fract_name = 'mandelbrot'
 
 if args.save is not None:
     fract_params.save_fig = True
-    if args.save != '':
+    if args.save != 'working_dir':
         fract_params.cwd = args.save
     else:
-        fract_params.cwd = os.getcwd()
+        fract_params.cwd = os.path.join(os.getcwd(), 'fractal_images')
 else:
     fract_params.save_fig = False
 
 if args.colors is not None:
-    fract_params.color_map = args.colors
+    if args.colors != 'random':
+        fract_params.color_map = args.colors
+    else:
+        fract_params.color_map = random.choices(plt.colormaps())[0]
 else:
-    fract_params.color_map = random.choices(plt.colormaps())[0]
+    fract_params.color_map = 'RdBu_r'
 
 if args.interpolation is not None:
     fract_params.interpolation = args.interpolation
 else:
     fract_params.interpolation = 'bilinear'
+
+# set min/max x/y values using center point and with
+fract_params.xmin = args.center_point.real - args.width/2
+fract_params.xmax = args.center_point.real + args.width/2
+fract_params.ymin = args.center_point.imag - args.width/2
+fract_params.ymax = args.center_point.imag + args.width/2
 
 if __name__=="__main__":
     gen_fractal(fract_params)
