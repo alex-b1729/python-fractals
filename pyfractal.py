@@ -137,7 +137,7 @@ def gen_fractal(fract_params, iterations=100, bound=2):
         fractal_func = in_burning_ship_set
 
     t0 = perf_counter()
-    N = fractal_func(fract_params, xn=1000, yn=1000)
+    N = fractal_func(fract_params, xn=1024, yn=1024)
     t1 = perf_counter()
     tot_time = round(t1-t0, 3)
     print('Total time:', tot_time, 'seconds')
@@ -150,7 +150,7 @@ def gen_fractal(fract_params, iterations=100, bound=2):
     if fract_params.save_fig:
         unique_save = dt.datetime.today().strftime('%m%d%Y-%H%M%S')
         save_path = os.path.join(fract_params.cwd, f'{fract_params.fract_name}_{unique_save}.png')
-        plt.savefig(save_path, dpi=1024, format='png', bbox_inches='tight')
+        plt.savefig(save_path, dpi=340, format='png', bbox_inches='tight')
         print('Saved to:', save_path)
         plt.show()
     else:
