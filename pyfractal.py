@@ -157,11 +157,11 @@ def gen_fractal(fract_params, iterations=100, bound=2):
         plt.show()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--fractal', help='Fractal name', nargs='?', const='random')
+parser.add_argument('-f', '--fractal', help='Fractal type', nargs='?', const='random')
 parser.add_argument('-s', '--save', help='Save image', nargs='?', const='working_dir')
 parser.add_argument('-c', '--colors', help='Matplotlib color map', nargs='?', const='random')
 parser.add_argument('-i', '--interpolation', help='Image interpolation')
-parser.add_argument('-x', '--center-point', help='Center of image in complex for: x+yj', type=complex, default=complex(0, 0))
+parser.add_argument('-x', '--center-point', help='Center of image in complex form: <real> <complex>', type=float, nargs=2, default=[0, 0])
 parser.add_argument('-w', '--width', help='Width of image', type=float, default=4)
 args = parser.parse_args()
 
@@ -198,10 +198,24 @@ else:
     fract_params.interpolation = 'bilinear'
 
 # set min/max x/y values using center point and with
-fract_params.xmin = args.center_point.real - args.width/2
-fract_params.xmax = args.center_point.real + args.width/2
-fract_params.ymin = args.center_point.imag - args.width/2
-fract_params.ymax = args.center_point.imag + args.width/2
+center_p = complex(args.center_point[0], args.center_point[1])
+fract_params.xmin = center_p.real - args.width/2
+fract_params.xmax = center_p.real + args.width/2
+fract_params.ymin = center_p.imag - args.width/2
+fract_params.ymax = center_p.imag + args.width/2
+
+# =============================================================================
+# # for testing
+# fract_params = Fract_Params()
+# fract_params.fract_name = 'burning-ship'
+# fract_params.save = False
+# fract_params.colors = 'RdBu_r'
+# fract_params.interpolation = 'bilinear'
+# fract_params.xmax = -1.56
+# fract_params.xmin = -1.92
+# fract_params.ymin = -.2
+# fract_params.ymax = .16
+# =============================================================================
 
 if __name__=="__main__":
     gen_fractal(fract_params)
