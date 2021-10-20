@@ -9,7 +9,7 @@ PyFractal generates [fractals](https://en.wikipedia.org/wiki/Fractal) in the com
 * [Features](#features)
 
 ## General info
-`pyfractal` generates fractal images using `numpy` and `matplotlib`.  It was inspired by [this](https://matplotlib.org/stable/gallery/showcase/mandelbrot.html#sphx-glr-gallery-showcase-mandelbrot-py) `matplotlib` example for rendering the Mandelbrot set. While it can currently render the Mandelbrot set, the Julia set, and the Burning Ship fractal, I plan to add more fractals as time allows.  `pyfractal` has a command line interface that allows the user to generate and save images at different levels of magnification and with different [matplotlib color pallets](https://matplotlib.org/stable/tutorials/colors/colormaps.html).   
+`pyfractal` generates fractal images using `numpy` and `matplotlib`.  It was inspired by [this](https://matplotlib.org/stable/gallery/showcase/mandelbrot.html#sphx-glr-gallery-showcase-mandelbrot-py) `matplotlib` example for rendering the Mandelbrot set. While `pyfractal` currently renders the Mandelbrot set, the Julia set, and the Burning Ship fractal, I plan to add more fractals as time allows.  `pyfractal` has a command line interface that allows the user to generate and save images at different levels of magnification and with different [matplotlib color pallets](https://matplotlib.org/stable/tutorials/colors/colormaps.html).   
 
 Currently supported fractals:
 * [Mandelbrot](https://en.wikipedia.org/wiki/Mandelbrot_set): `mandelbrot`
@@ -17,23 +17,22 @@ Currently supported fractals:
 * [Burning ship](https://en.wikipedia.org/wiki/Burning_Ship_fractal): `burning-ship`
 
 ## Usage
-`pyfractal` is built to interface with the command line.   
+`pyfractal` is built to interface with the command line.  To start using `pyfractal` clone this GitHub repository and set the working directory to `python-fractals`.   
+```
+git clone https://github.com/alex-b1729/python-fractals.git
+cd ~/python-fractals
+```
 
-To start using `pyfractal` clone this GitHub repository and set the working directory to `python-fractals`.   
-
-Running `pyfractal` without any arguments will by default generate the Mandelbrot set using the `RdBu_r` color map.  
+The most basic way to run `pyfractal`, without any arguments:
 ``python -m pyfractal``
+This, by default, generates the Mandelbrot set using the `RdBu_r` color map.  
 
-### Rendering
-`-f [FRACTAL]` renders the specified fractal.  Default is `mandelbrot`.   When used without argument selects a fractal at random.  
-`-c [COLOR]` uses the specified [matplotlib colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html).  Default is `RdBu_r`.   When used without argument selects a random colormap.  
+### Optional arguments
+`-f [FRACTAL]` renders the specified fractal.  Default is `mandelbrot`.   When the `-f` flag is used without argument it selects a random fractal.  
+`-c [COLOR]` uses the specified [matplotlib colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html).  Default is `RdBu_r`.   When the `-c` flag is used without argument it selects a random colormap.  
 `-i [INTERPOLATION]` The [matplotlib imshow interpolation](https://matplotlib.org/stable/gallery/images_contours_and_fields/interpolation_methods.html) to use when rendering the fractal.  Default is `bilinear`.
-
-### Image zoom and position
-`-x CENTER_POINT` The center point of the image in complex coordinates `<real> <imaginary>`.  For example, `-x 0.2 1.3` centers the rendered image at `0.2` on the horizontal real axis and `-1.3` on the vertical imaginary one.  If the user specifies only one of the real or imaginary parts, the script treats the other as `0`.  E.g. `-x -0.9` centers the image at `-0.9` on the horizontal and `0` on the vertical.  
+`-x CENTER_POINT` The center point of the image in complex coordinates in the form `<real> <imaginary>`.  For example, `-x 0.2 1.3` centers the rendered image at `0.2` on the horizontal real axis and `-1.3` on the vertical imaginary axis.  Centered at the origin by default.
 `-w WIDTH` specifies the width of the square image.  This allows for zooming in on a fractal and is particularly useful when combined with the `-x` argument.  For example `-x 1 0.5 -w .2` centers the image at `1 0.5` and displays real values ranging from `0.9` through `1.1` and imaginary value from `0.4` through `0.6`.  
-
-### Saving
 `-s [FILE-PATH]` Saves the image to disk as a `.png` file.  By default the image is saved to the project's `fractal_images` sub-directory.  The user can also specify a path to a directory.  The default image name is `<fractal-name>_<date>_<time>.png`.  In the future I'll make this customizable.  
 
 
@@ -45,14 +44,14 @@ Close up of Mandelbrot with default colormap.
 
 ---
 
-Magnification of largest ship to left of main ship in Burning Ship fractal.  Burning Ship is slightly less pixelated with `bicubic` interpolation.   
+Magnification of largest ship to left of main ship in Burning Ship fractal using the `gist_stern` colormap.  Burning Ship is slightly less pixelated with `bicubic` interpolation.   
 `python -m pyfractal -f burning-ship -x -1.74 -.03 -w .15 -c gist_stern -i bicubic`
 
 ![Magnification of Left large Burning Ship](./fractal_images/burning-ship1.png)
 
 ---
 
-Julia set with random color map applied and saved to directory `/User/foo/bar`.    
+Julia set with random colormap and saved to directory `/User/foo/bar`.    
 `python -m pyfractal -f julia -c -s /User/foo/bar`
 
 ![Julia set](./fractal_images/julia1.png)
@@ -70,4 +69,4 @@ Julia set with random color map applied and saved to directory `/User/foo/bar`.
 - [ ] Allow user to change image resolution using the command line.
 - [ ] Specify exact real and imaginary points of image corners.
 ### Known issues:
-* Script replaces `(x, j)` with `(-x, j)` when rendering close zooms of Burning ship fractal.  Maybe other fractals too but not sure at this point since Mandelbrot and Julia are symmetric.  
+* Script replaces `(x, y)` with `(-x, y)` when rendering close zooms of Burning ship fractal.  Maybe other fractals too but not sure at this point since Mandelbrot and Julia are symmetric.  
