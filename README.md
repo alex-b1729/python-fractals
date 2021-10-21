@@ -28,12 +28,12 @@ The most basic way to run `pyfractal`, without any arguments:
 This, by default, generates the Mandelbrot set using the `RdBu_r` color map.  
 
 ### Optional arguments
-`-f [FRACTAL]` renders the specified fractal.  Default is `mandelbrot`.   When the `-f` flag is used without argument it selects a random fractal.  
-`-c [COLOR]` uses the specified [matplotlib colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html).  Default is `RdBu_r`.   When the `-c` flag is used without argument it selects a random colormap.  
-`-i [INTERPOLATION]` The [matplotlib imshow interpolation](https://matplotlib.org/stable/gallery/images_contours_and_fields/interpolation_methods.html) to use when rendering the fractal.  Default is `bilinear`.
-`-x CENTER_POINT` The center point of the image in complex coordinates in the form `<real> <imaginary>`.  For example, `-x 0.2 1.3` centers the rendered image at `0.2` on the horizontal real axis and `-1.3` on the vertical imaginary axis.  Centered at the origin by default.
-`-w WIDTH` specifies the width of the square image.  This allows for zooming in on a fractal and is particularly useful when combined with the `-x` argument.  For example `-x 1 0.5 -w .2` centers the image at `1 0.5` and displays real values ranging from `0.9` through `1.1` and imaginary value from `0.4` through `0.6`.  
-`-s [FILE-PATH]` Saves the image to disk as a `.png` file.  By default the image is saved to the project's `fractal_images` sub-directory.  The user can also specify a path to a directory.  The default image name is `<fractal-name>_<date>_<time>.png`.  In the future I'll make this customizable.  
+* `-f [FRACTAL]` renders the specified fractal.  Default is `mandelbrot`.   When the `-f` flag is used without argument it selects a random fractal.  
+* `-c [COLOR]` uses the specified [matplotlib colormap](https://matplotlib.org/stable/tutorials/colors/colormaps.html).  Default is `RdBu_r`.   When the `-c` flag is used without argument it selects a random colormap.  
+* `-i [INTERPOLATION]` The [matplotlib imshow interpolation](https://matplotlib.org/stable/gallery/images_contours_and_fields/interpolation_methods.html) to use when rendering the fractal.  Default is `bilinear`.
+* `-x CENTER_POINT` The center point of the image in complex coordinates in the form `<real> <imaginary>`.  For example, `-x 0.2 1.3` centers the rendered image at `0.2` on the horizontal real axis and `-1.3` on the vertical imaginary axis.  Centered at the origin by default.
+* `-w WIDTH` specifies the width of the square image.  This allows for zooming in on a fractal and is particularly useful when combined with the `-x` argument.  For example `-x 1 0.5 -w .2` centers the image at `1 0.5` and displays real values ranging from `0.9` through `1.1` and imaginary value from `0.4` through `0.6`.  
+* `-s [FILE-PATH]` Saves the image to disk as a `.png` file.  By default the image is saved to the project's `fractal_images` sub-directory.  The user can also specify a path to a directory.  The default image name is `<fractal-name>_<date>_<time>.png`.  In the future I'll make this customizable.  
 
 
 ## Example gallery with code
