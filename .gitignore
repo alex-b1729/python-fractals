@@ -140,4 +140,7 @@ cython_debug/
 # MacOS stuff
 .DS_Store
 
+# other
+.idea/
+
 # project data files
