@@ -29,6 +29,7 @@
 # http://www.paulbourke.net/fractals/burnship/
 
 import os
+import abc
 import sys
 import random
 import argparse
@@ -38,6 +39,39 @@ import datetime as dt
 from time import perf_counter
 import matplotlib.pyplot as plt
 import matplotlib.image as pmimg
+
+
+class Fractal(abc.ABC):
+    """Fractal base class"""
+    def __init__(self, name: str):
+        self.name = name
+
+        # image params
+        self.xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2))
+        self.pixels_per_unit = 231
+
+        self.xmin = -2
+        self.xmax = 2
+        self.ymin = -2
+        self.ymax = 2
+        self.c = 0
+        self.z = 0
+        self.color_map = 'RdBu_r'
+        self.interpolation = 'bilinear'
+
+        # matrix objects
+        self.X = np.linspace(self.xy[0][0], self.xy[1[0]],
+                             abs(self.xy[1][0] - self.xy[0][0]) * self.pixels_per_unit).astype(np.float32)
+        self.Y = np.linspace(self.xy[0][1], self.xy[1[1]],
+                             abs(self.xy[0][1] - self.xy[1][1]) * self.pixels_per_unit).astype(np.float32)
+        self.Z = self.X + self.Y[:, None] * 1j
+        # N is the matrix of n that represent the number of 
+        self.N = np.zeros_like(Z, dtype=int)
+        C = np.ones_like(Z, dtype=np.cdouble) * fract_params.c
+
+    @abc.abstractmethod
+    def set(self):
+        pass
 
 def in_julia_set(fract_params, xn, yn, iterations=100, bound=2):
     """Return Julia set matrix"""
