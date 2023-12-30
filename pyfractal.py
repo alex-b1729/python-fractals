@@ -36,15 +36,14 @@ import argparse
 import numpy as np
 import pandas as pd
 import datetime as dt
+from PIL import Image
 from time import perf_counter
 import matplotlib.pyplot as plt
 import matplotlib.image as pmimg
 
 
-class Fractal(abc.ABC):
-    """Fractal base class.
-    Technically this is just for escape-time fractals
-    """
+class EscapeTimeFractal(abc.ABC):
+    """Escape-time fractal base class"""
     def __init__(self, name: str):
         self.name = name
 
@@ -52,12 +51,12 @@ class Fractal(abc.ABC):
         self.xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2))
         self.pixels_per_unit = 231
 
-        self.bound = 2
+        self.escape_bound = 2
 
-        self.xmin = -2
-        self.xmax = 2
-        self.ymin = -2
-        self.ymax = 2
+        # self.xmin = -2
+        # self.xmax = 2
+        # self.ymin = -2
+        # self.ymax = 2
         self.c = 0
         self.z = 0
         self.color_map = 'RdBu_r'
@@ -76,7 +75,6 @@ class Fractal(abc.ABC):
     def quadratic_map(self, *args, **kwargs) -> None:
         """
         Function that defines the fractal.
-        Modifies class attributes in-place and returns nothing.
         """
         return
 
@@ -87,14 +85,51 @@ class Fractal(abc.ABC):
         :return: None
         """
         for n in range(iterations):
-            pass
+            self.quadratic_map()
 
-    @abc.abstractmethod
-    def set(self):
+    def render(self, show: bool = True, save_path: str = None):
+        plt.axis('off')
+        plt.imshow(self.N, interpolation=self.interpolation, cmap=self.color_map)
+        if save_path is not None:
+            plt.savefig(save_path, dpi=self.pixels_per_unit, format='png', bbox_inches='tight')
+        if show:
+            plt.show()
+
+    def set_center(self, center: tuple[float, float]):
         pass
 
+
+class MandelbrotSet(EscapeTimeFractal):
+    def __init__(self):
+        super().__init__('Mandelbrot Set')
+
+        # mandelbrot calc params
+        self.C = self.complex_plane
+        self.Z = np.zeros_like(self.C)
+
+    def quadratic_map(self, I: np.array) -> None:
+        """I (np.array) mask defining which values to apply calculation to"""
+        self.N[I] += 1
+        self.Z[I] = self.Z[I] ** 2 + self.C[I]
+
+    def calculate_N(self, iterations: int) -> None:
+        for n in range(iterations):
+            I = abs(self.Z) < self.escape_bound
+            self.quadratic_map(I)
+
+    # def render(self):
+    #     # plt.axis('off')
+    #     # plt.imshow(self.N, #extent=(self.xy[0][0], self.xy[1][0], self.xy[1][1], self.xy[0][1]),
+    #     #            interpolation=self.interpolation, cmap=self.color_map)
+    #     # plt.show()
+    #     im = Image.fromarray((self.N * 255 / self.N.max()).astype(np.uint8), 'L')
+    #     # print(self.N.max())
+    #     # im = Image.fromarray(self.N * 255 / self.N.max(), 'L')
+    #     im.show()
+
+"""
 def in_julia_set(fract_params, xn, yn, iterations=100, bound=2):
-    """Return Julia set matrix"""
+    "Return Julia set matrix"
     X = np.linspace(fract_params.xmin, fract_params.xmax, xn).astype(np.float32)
     Y = np.linspace(fract_params.ymin, fract_params.ymax, yn).astype(np.float32)
     Z = X + Y[:, None] * 1j
@@ -107,7 +142,7 @@ def in_julia_set(fract_params, xn, yn, iterations=100, bound=2):
     return N
 
 def in_burning_ship_set(fract_params, xn, yn, iterations=100, bound=2):
-    """Return Mandelbrot set matrix"""
+    "Return Mandelbrot set matrix"
     X = np.linspace(fract_params.xmin, fract_params.xmax, xn).astype(np.float32)
     Y = np.linspace(fract_params.ymin, fract_params.ymax, yn).astype(np.float32)
     C = X + Y[:, None] * 1j
@@ -121,7 +156,7 @@ def in_burning_ship_set(fract_params, xn, yn, iterations=100, bound=2):
     return N
 
 def in_mandelbrot_set(fract_params, xn, yn, iterations=100, bound=2):
-    """Return Burning Ship set matrix"""
+    "Return Burning Ship set matrix"
     X = np.linspace(fract_params.xmin, fract_params.xmax, xn).astype(np.float32)
     Y = np.linspace(fract_params.ymin, fract_params.ymax, yn).astype(np.float32)
     C = X + Y[:, None] * 1j
@@ -134,7 +169,7 @@ def in_mandelbrot_set(fract_params, xn, yn, iterations=100, bound=2):
     return N
 
 class Fract_Params():
-    """Holds fractal parameters"""
+    "Holds fractal parameters"
     def __init__(self):
         self.fract_name = 'mandelbrot'
         self.xmin = -2
@@ -149,7 +184,7 @@ class Fract_Params():
         self.cwd = os.getcwd()
 
 def gen_fractal(fract_params, iterations=100, bound=2):
-    """Generate fractal set"""
+    "Generate fractal set"
 
     # info to terminal
     print('Fractal:', fract_params.fract_name.capitalize(), 'set')
@@ -270,7 +305,10 @@ fract_params.ymax = center_p.imag + args.width/2
 # fract_params.ymin = -.2
 # fract_params.ymax = .16
 # =============================================================================
+"""
 
 if __name__=="__main__":
-    # gen_fractal(fract_params)
-    f = Fractal()
+    f = MandelbrotSet()
+
+    f.calculate_N(100)
+    f.render()
