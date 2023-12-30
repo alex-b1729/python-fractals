@@ -42,13 +42,17 @@ import matplotlib.image as pmimg
 
 
 class Fractal(abc.ABC):
-    """Fractal base class"""
+    """Fractal base class.
+    Technically this is just for escape-time fractals
+    """
     def __init__(self, name: str):
         self.name = name
 
         # image params
         self.xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2))
         self.pixels_per_unit = 231
+
+        self.bound = 2
 
         self.xmin = -2
         self.xmax = 2
@@ -60,14 +64,30 @@ class Fractal(abc.ABC):
         self.interpolation = 'bilinear'
 
         # matrix objects
-        self.X = np.linspace(self.xy[0][0], self.xy[1[0]],
+        self.X = np.linspace(self.xy[0][0], self.xy[1][0],
                              abs(self.xy[1][0] - self.xy[0][0]) * self.pixels_per_unit).astype(np.float32)
-        self.Y = np.linspace(self.xy[0][1], self.xy[1[1]],
+        self.Y = np.linspace(self.xy[0][1], self.xy[1][1],
                              abs(self.xy[0][1] - self.xy[1][1]) * self.pixels_per_unit).astype(np.float32)
-        self.Z = self.X + self.Y[:, None] * 1j
-        # N is the matrix of n that represent the number of 
-        self.N = np.zeros_like(Z, dtype=int)
-        C = np.ones_like(Z, dtype=np.cdouble) * fract_params.c
+        self.complex_plane = self.X + self.Y[:, None] * 1j
+        # N is the matrix of n that represent the number of iterations before a point escapes
+        self.N = np.zeros_like(self.complex_plane, dtype=int)
+
+    @abc.abstractmethod
+    def quadratic_map(self, *args, **kwargs) -> None:
+        """
+        Function that defines the fractal.
+        Modifies class attributes in-place and returns nothing.
+        """
+        return
+
+    def calculate_N(self, iterations: int) -> None:
+        """
+        Calculates number of iterations for which each point in self.N remains bounded
+        :param iterations: int for number of calculation iterations
+        :return: None
+        """
+        for n in range(iterations):
+            pass
 
     @abc.abstractmethod
     def set(self):
@@ -252,4 +272,5 @@ fract_params.ymax = center_p.imag + args.width/2
 # =============================================================================
 
 if __name__=="__main__":
-    gen_fractal(fract_params)
+    # gen_fractal(fract_params)
+    f = Fractal()
