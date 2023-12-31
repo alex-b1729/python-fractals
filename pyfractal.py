@@ -95,7 +95,7 @@ class EscapeTimeFractal(abc.ABC):
 
     def render(self, show: bool = True, save_path: str = None):
         plt.axis('off')
-        plt.imshow(self.N, interpolation=self.interpolation, cmap=self.color_map)
+        plt.imshow(self.N, origin='lower', interpolation=self.interpolation, cmap=self.color_map)
         if save_path is not None:
             plt.savefig(save_path, dpi=self.pixels_per_unit, format='png', bbox_inches='tight')
         if show:
