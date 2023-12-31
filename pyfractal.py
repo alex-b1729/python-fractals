@@ -70,22 +70,28 @@ class EscapeTimeFractal(abc.ABC):
         self.complex_plane = self.X + self.Y[:, None] * 1j
         # N is the matrix of n that represent the number of iterations before a point escapes
         self.N = np.zeros_like(self.complex_plane, dtype=int)
+        self.Z = None
+        self.C = None
 
     @abc.abstractmethod
     def quadratic_map(self, *args, **kwargs) -> None:
         """
         Function that defines the fractal.
+        Modifies class parameters in place
         """
-        return
+        pass
 
-    def calculate_N(self, iterations: int) -> None:
+    def calculate_escape_time(self, iterations: int) -> None:
         """
         Calculates number of iterations for which each point in self.N remains bounded
         :param iterations: int for number of calculation iterations
         :return: None
         """
+        # I: np.array is matrix of Z values that haven't yet escaped
+        # apply quadratic_map only to these values
         for n in range(iterations):
-            self.quadratic_map()
+            I = abs(self.Z) < self.escape_bound
+            self.quadratic_map(I)
 
     def render(self, show: bool = True, save_path: str = None):
         plt.axis('off')
@@ -112,20 +118,31 @@ class MandelbrotSet(EscapeTimeFractal):
         self.N[I] += 1
         self.Z[I] = self.Z[I] ** 2 + self.C[I]
 
-    def calculate_N(self, iterations: int) -> None:
-        for n in range(iterations):
-            I = abs(self.Z) < self.escape_bound
-            self.quadratic_map(I)
 
-    # def render(self):
-    #     # plt.axis('off')
-    #     # plt.imshow(self.N, #extent=(self.xy[0][0], self.xy[1][0], self.xy[1][1], self.xy[0][1]),
-    #     #            interpolation=self.interpolation, cmap=self.color_map)
-    #     # plt.show()
-    #     im = Image.fromarray((self.N * 255 / self.N.max()).astype(np.uint8), 'L')
-    #     # print(self.N.max())
-    #     # im = Image.fromarray(self.N * 255 / self.N.max(), 'L')
-    #     im.show()
+class JuliaSet(EscapeTimeFractal):
+    def __init__(self):
+        super().__init__('Julia Set')
+
+        # # julia set params
+        self.Z = self.complex_plane
+        self.C = np.ones_like(self.complex_plane, dtype=np.cdouble) #* self.c
+
+    def quadratic_map(self, I: np.array) -> None:
+        self.N[I] += 1
+        self.Z[I] = self.Z[I] ** 2 + self.C[I]
+
+
+class BurningShipSet(EscapeTimeFractal):
+    def __init__(self):
+        super().__init__('Burning Ship Set')
+
+        # burning ship params
+        self.C = self.complex_plane
+        self.Z = np.zeros_like(self.complex_plane) #, dtype=np.cdouble)
+
+    def quadratic_map(self, I: np.array) -> None:
+        self.N[I] += 1
+        self.Z[I] = (np.abs(self.Z[I].real) + np.abs(self.Z[I].imag) * 1j)**2 + self.C[I]
 
 """
 def in_julia_set(fract_params, xn, yn, iterations=100, bound=2):
@@ -308,7 +325,8 @@ fract_params.ymax = center_p.imag + args.width/2
 """
 
 if __name__=="__main__":
-    f = MandelbrotSet()
-
-    f.calculate_N(100)
+    # f = MandelbrotSet()
+    # f = JuliaSet()
+    f = BurningShipSet()
+    f.calculate_escape_time(100)
     f.render()
