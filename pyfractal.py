@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2021 Alexander Brefeld <alexander.brefeld@protonmail.com>
+# Copyright (C) 2021 Alexander Brefeld <code@abrefeld.anonaddy.com>
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ class EscapeTimeFractal(abc.ABC):
         self.name = name
 
         # image params
-        self.xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2))
+        self.xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2)) eg bounding box
         self.pixels_per_unit = 231
 
         self.escape_bound = 2
@@ -57,7 +57,7 @@ class EscapeTimeFractal(abc.ABC):
         # self.xmax = 2
         # self.ymin = -2
         # self.ymax = 2
-        # self.c = 0
+        self.c = 1
         # self.z = 0
         self.color_map = 'RdBu_r'
         self.interpolation = 'bilinear'
@@ -70,25 +70,30 @@ class EscapeTimeFractal(abc.ABC):
         self.complex_plane = self.X + self.Y[:, None] * 1j
         # N is the matrix of n that represent the number of iterations before a point escapes
         self.N = np.zeros_like(self.complex_plane, dtype=int)
-        self.Z = None
-        self.C = None
-
-    @property
-    def c(self):
-        return self._c
-
-    @c.setter
-    def c(self, value):
-        self._c = value
-        self.C *= value
+        # self.Z = None
+        # self.C = None
 
     @abc.abstractmethod
     def quadratic_map(self, *args, **kwargs) -> None:
         """
         Function that defines the fractal.
-        Modifies class parameters in place
+        Should modify _calc class parameters in place
         """
         pass
+
+    def init_calculation_values(self):
+        # print(self.xy[0][0], self.xy[1][0], abs(self.xy[1][0] - self.xy[0][0]) *
+        #                           self.pixels_per_unit)
+        self.X_calc = np.linspace(self.xy[0][0], self.xy[1][0],
+                                  int(abs(self.xy[1][0] - self.xy[0][0]) *
+                                  self.pixels_per_unit)).astype(np.float32)
+        self.Y_calc = np.linspace(self.xy[0][1], self.xy[1][1],
+                                  int(abs(self.xy[0][1] - self.xy[1][1]) *
+                                  self.pixels_per_unit)).astype(np.float32)
+        # N is the matrix of n that represent the number of iterations before a point escapes
+        self.N_calc = self.N
+        self.Z_calc = self.Z #* self.z
+        self.C_calc = self.C #* self.c
 
     def calculate_escape_time(self, iterations: int) -> None:
         """
@@ -96,15 +101,20 @@ class EscapeTimeFractal(abc.ABC):
         :param iterations: int for number of calculation iterations
         :return: None
         """
-        # I: np.array is matrix of Z values that haven't yet escaped
-        # apply quadratic_map only to these values
+        sys.stdout.write(f'Calculating escape time for {self.name} with {iterations} iterations\n')
+        self.init_calculation_values()
         for n in range(iterations):
-            I = abs(self.Z) < self.escape_bound
+            # I: np.array is matrix of Z values that haven't yet escaped
+            # apply quadratic_map only to these values
+            I = abs(self.Z_calc) < self.escape_bound
             self.quadratic_map(I)
+            sys.stdout.write(
+                f'\rProgress: {"#" * int(40 * n / iterations)}{" " * (40 - int(40 * n / iterations))}| '
+                f'{int(100 * n / iterations)}%')
 
     def render(self, show: bool = True, save_path: str = None):
         plt.axis('off')
-        plt.imshow(self.N, origin='lower', interpolation=self.interpolation, cmap=self.color_map)
+        plt.imshow(self.N_calc, origin='lower', interpolation=self.interpolation, cmap=self.color_map)
         if save_path is not None:
             plt.savefig(save_path, dpi=self.pixels_per_unit, format='png', bbox_inches='tight')
         if show:
@@ -124,8 +134,8 @@ class MandelbrotSet(EscapeTimeFractal):
 
     def quadratic_map(self, I: np.array) -> None:
         """I (np.array) mask defining which values to apply calculation to"""
-        self.N[I] += 1
-        self.Z[I] = self.Z[I] ** 2 + self.C[I]
+        self.N_calc[I] += 1
+        self.Z_calc[I] = self.Z_calc[I] ** 2 + self.C_calc[I]
 
 
 class JuliaSet(EscapeTimeFractal):
@@ -133,12 +143,20 @@ class JuliaSet(EscapeTimeFractal):
         super().__init__('Julia Set')
 
         # # julia set params
-        self.Z = self.complex_plane
+        # self.Z = self.complex_plane
         self.C = np.ones_like(self.complex_plane, dtype=np.cdouble) #* self.c
 
+    @property
+    def Z(self):
+        return self.complex_plane
+
+    # @property
+    # def C(self):
+    #     return np.ones_like(self.complex_plane, dtype=np.cdouble)
+
     def quadratic_map(self, I: np.array) -> None:
-        self.N[I] += 1
-        self.Z[I] = self.Z[I] ** 2 + self.C[I]
+        self.N_calc[I] += 1
+        self.Z_calc[I] = self.Z_calc[I] ** 2 + self.C_calc[I]
 
 
 class BurningShipSet(EscapeTimeFractal):
@@ -154,10 +172,11 @@ class BurningShipSet(EscapeTimeFractal):
         self.Z[I] = (np.abs(self.Z[I].real) + np.abs(self.Z[I].imag) * 1j)**2 + self.C[I]
 
 
-if __name__=="__main__":
-    # f = MandelbrotSet()
-    f = JuliaSet()
+if __name__ == '__main__':
+    f = MandelbrotSet()
+    # f = JuliaSet()
     # f = BurningShipSet()
-    f.c = complex(-0.82, -0.2)
+    # f.c = complex(-0.82, -0.2)
+    # f.xy = ((-1.5, 0.5), (-0.5, -0.5))
     f.calculate_escape_time(100)
     f.render()
