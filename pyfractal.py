@@ -119,14 +119,14 @@ class EscapeTimeFractal(abc.ABC):
     def set_bounding_box(self,
                          center: tuple[float, float] = (0., 0.),
                          width: float = 4.,
-                         hight: float = None,
+                         height: float = None,
                          xy: tuple[tuple[float, float], tuple[float, float]] = None
                          ) -> None:
         """
         Define image bounding box
         :param center: (Re(c), Im(c))
         :param width:
-        :param hight: if None set to width
+        :param height: if None set to width
         :param xy:
         :return:
         """
@@ -134,10 +134,10 @@ class EscapeTimeFractal(abc.ABC):
             assert xy[0][0] < xy[1][0] and xy[0][1] > xy[1][1]
             self._xy = xy
         else:
-            if hight is None: hight = width
+            if height is None: height = width
             x1 = center[0] - width / 2
-            y1 = center[1] + hight / 2
-            self._xy = ((x1, y1), (x1 + width, y1 - hight))
+            y1 = center[1] + height / 2
+            self._xy = ((x1, y1), (x1 + width, y1 - height))
 
 
 class MandelbrotSet(EscapeTimeFractal):
@@ -159,30 +159,24 @@ class JuliaSet(EscapeTimeFractal):
     def __init__(self):
         super().__init__('Julia Set')
 
-        # # julia set params
-        # self.Z = self.complex_plane
-        self.C = np.ones_like(self.complex_plane, dtype=np.cdouble) #* self.c
-
-    @property
-    def Z(self):
-        return self.complex_plane
-
-    # @property
-    # def C(self):
-    #     return np.ones_like(self.complex_plane, dtype=np.cdouble)
+    def init_calculation_values(self) -> None:
+        self.C = np.ones_like(self.complex_plane, dtype=np.clongdouble) * self.c
+        self.Z = self.complex_plane
+        self.N = np.zeros_like(self.C, dtype=int)
 
     def quadratic_map(self, I: np.array) -> None:
-        self.N_calc[I] += 1
-        self.Z_calc[I] = self.Z_calc[I] ** 2 + self.C_calc[I]
+        self.N[I] += 1
+        self.Z[I] = self.Z[I] ** 2 + self.C[I]
 
 
 class BurningShipSet(EscapeTimeFractal):
     def __init__(self):
         super().__init__('Burning Ship Set')
 
-        # burning ship params
+    def init_calculation_values(self) -> None:
         self.C = self.complex_plane
-        self.Z = np.zeros_like(self.complex_plane) #, dtype=np.cdouble)
+        self.Z = np.zeros_like(self.complex_plane, dtype=np.clongdouble)
+        self.N = np.zeros_like(self.C, dtype=int)
 
     def quadratic_map(self, I: np.array) -> None:
         self.N[I] += 1
@@ -190,15 +184,16 @@ class BurningShipSet(EscapeTimeFractal):
 
 
 if __name__ == '__main__':
-    # f = JuliaSet()
-    # f = BurningShipSet()
-    # f.c = complex(-0.82, -0.2)
-    # f.set_bounding_box(xy=((-1.5, 0.5), (-0.5, -0.5)))
-
     # Mandelbrot Misiurewicz point
     f = MandelbrotSet()
     f.set_bounding_box(center=(-0.743030, 0.126433), width=0.016110)
-    
-    f.pixels_per_unit = 1000
+
+    # f = JuliaSet()
+    # f.c = complex(-0.835, -0.2321)
+
+    # f = BurningShipSet()
+    # f.set_bounding_box(center=(-1.7, 0), width=0.3, height=0.3)
+
+    f.pixels_per_unit = 500
     f.calculate_escape_time(1000)
     f.render()
