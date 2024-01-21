@@ -120,6 +120,7 @@ class EscapeTimeFractal(abc.ABC):
                          center: tuple[float, float] = (0., 0.),
                          width: float = 4.,
                          height: float = None,
+                         magnification: int = 1,
                          xy: tuple[tuple[float, float], tuple[float, float]] = None
                          ) -> None:
         """
@@ -127,14 +128,17 @@ class EscapeTimeFractal(abc.ABC):
         :param center: (Re(c), Im(c))
         :param width:
         :param height: if None set to width
-        :param xy:
-        :return:
+        :param magnification: relative to default bounding box of ((-2, 2), (2, -2))
+        :param xy: bounding box
+        :return: None
         """
         if xy is not None:
             assert xy[0][0] < xy[1][0] and xy[0][1] > xy[1][1]
             self._xy = xy
         else:
             if height is None: height = width
+            width, height = width / magnification, height / magnification
+            print(width / (2 * magnification))
             x1 = center[0] - width / 2
             y1 = center[1] + height / 2
             self._xy = ((x1, y1), (x1 + width, y1 - height))
@@ -186,7 +190,7 @@ class BurningShipSet(EscapeTimeFractal):
 if __name__ == '__main__':
     # Mandelbrot Misiurewicz point
     f = MandelbrotSet()
-    f.set_bounding_box(center=(-0.743030, 0.126433), width=0.016110)
+    f.set_bounding_box(center=(-0.743030, 0.126433), width=0.016110) #, magnification=500)
 
     # f = JuliaSet()
     # f.c = complex(-0.835, -0.2321)
