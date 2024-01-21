@@ -93,7 +93,7 @@ class EscapeTimeFractal(abc.ABC):
         """
         pass
 
-    def calculate_escape_time(self) -> None:
+    def calculate_escape_time(self, verbose: bool = True) -> None:
         """
         Calculates number of iterations for which each point in self.N remains bounded
         :param iterations: int for number of calculation iterations
@@ -107,12 +107,15 @@ class EscapeTimeFractal(abc.ABC):
             # apply quadratic_map only to these values
             I = abs(self.Z) < self.escape_bound
             self.quadratic_map(I)
-            sys.stdout.write(
-                f'\rProgress: {"#" * int(40 * n / self.iterations)}{" " * (40 - int(40 * n / self.iterations))}| '
-                f'{int(100 * n / self.iterations)}%')
+            if verbose:
+                sys.stdout.write(
+                    f'\rProgress: {"#" * int(40 * (n + 1) / self.iterations)}'
+                    f'{" " * (40 - int(40 * (n + 1) / self.iterations))}| '
+                    f'{int(100 * (n + 1) / self.iterations)}%')
 
-    def render(self, show: bool = True, save_path: str = None):
-        plt.axis('off')
+    def render(self, show: bool = True, save_path: str = None, **kwargs):
+        if 'axis' in kwargs: plt.axis(kwargs['axis'])
+        else: plt.axis('off')
         plt.imshow(self.N, origin='lower', interpolation=self.interpolation, cmap=self.color_map)
         if save_path is not None:
             plt.savefig(save_path, dpi=self.pixels_per_unit, format='png', bbox_inches='tight')
@@ -182,6 +185,10 @@ class EscapeTimeFractal(abc.ABC):
         with open(path, 'r') as f:
             params = json.loads(f.read())
 
+        if params['name'] != self.name:
+            print(f'WARNING: trying to import params for a different type of fractal. '
+                  f'self fractal: {self.name}, import fractal: {params["name"]}')
+
         self._xy = params['xy']
         self._center = params['center']
         self._width = params['width']
@@ -249,10 +256,8 @@ if __name__ == '__main__':
     # f = BurningShipSet()
     # f.set_bounding_box(center=(-1.7, 0), width=0.3, height=0.3)
 
-    # f.pixels_per_unit = 500
-    # f.iterations = 1000
-    # f.export_params('/Users/abrefeld/Desktop/fractest.json')
-    f.import_params('/Users/abrefeld/Desktop/fractest.json')
+    f.pixels_per_unit = 500
+    f.iterations = 200
     print(f.params)
     f.calculate_escape_time()
     f.render()
