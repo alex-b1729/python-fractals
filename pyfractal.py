@@ -48,7 +48,7 @@ class EscapeTimeFractal(abc.ABC):
         self.name = name
 
         # image params
-        self.xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2)) eg bounding box
+        self._xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2)) eg bounding box
         self.pixels_per_unit = 231
 
         self.escape_bound = 2
@@ -69,18 +69,16 @@ class EscapeTimeFractal(abc.ABC):
         Builds X and Y as np.linspace and create plane of calculation
         :return: None
         """
-        self.X = np.linspace(self.xy[0][0], self.xy[1][0],
-                             int(abs(self.xy[1][0] - self.xy[0][0]) *
-                                 self.pixels_per_unit)).astype(np.float32)
-        self.Y = np.linspace(self.xy[0][1], self.xy[1][1],
-                             int(abs(self.xy[0][1] - self.xy[1][1]) *
-                                 self.pixels_per_unit)).astype(np.float32)
+        self.X = np.linspace(self._xy[0][0], self._xy[1][0],
+                             self.pixels_per_unit).astype(np.longdouble)
+        self.Y = np.linspace(self._xy[0][1], self._xy[1][1],
+                             self.pixels_per_unit).astype(np.longdouble)
         self.complex_plane = self.X + self.Y[:, None] * 1j
 
     @abc.abstractmethod
     def init_calculation_values(self) -> None:
         """
-        Set self.C, self.Z, self.N
+        Define self.C, self.Z, self.N
         :return: None
         """
 
@@ -118,8 +116,28 @@ class EscapeTimeFractal(abc.ABC):
         if show:
             plt.show()
 
-    def set_center(self, center: tuple[float, float]):
-        pass
+    def set_bounding_box(self,
+                         center: tuple[float, float] = (0., 0.),
+                         width: float = 4.,
+                         hight: float = None,
+                         xy: tuple[tuple[float, float], tuple[float, float]] = None
+                         ) -> None:
+        """
+        Define image bounding box
+        :param center: (Re(c), Im(c))
+        :param width:
+        :param hight: if None set to width
+        :param xy:
+        :return:
+        """
+        if xy is not None:
+            assert xy[0][0] < xy[1][0] and xy[0][1] > xy[1][1]
+            self._xy = xy
+        else:
+            if hight is None: hight = width
+            x1 = center[0] - width / 2
+            y1 = center[1] + hight / 2
+            self._xy = ((x1, y1), (x1 + width, y1 - hight))
 
 
 class MandelbrotSet(EscapeTimeFractal):
@@ -172,10 +190,15 @@ class BurningShipSet(EscapeTimeFractal):
 
 
 if __name__ == '__main__':
-    f = MandelbrotSet()
     # f = JuliaSet()
     # f = BurningShipSet()
     # f.c = complex(-0.82, -0.2)
-    f.xy = ((-1.5, 0.5), (-0.5, -0.5))
-    f.calculate_escape_time(100)
+    # f.set_bounding_box(xy=((-1.5, 0.5), (-0.5, -0.5)))
+
+    # Mandelbrot Misiurewicz point
+    f = MandelbrotSet()
+    f.set_bounding_box(center=(-0.743030, 0.126433), width=0.016110)
+    
+    f.pixels_per_unit = 1000
+    f.calculate_escape_time(1000)
     f.render()
