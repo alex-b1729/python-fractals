@@ -31,6 +31,7 @@
 import os
 import abc
 import sys
+import json
 import random
 import argparse
 import numpy as np
@@ -49,14 +50,16 @@ class EscapeTimeFractal(abc.ABC):
 
         # image params
         self._xy = ((-2, 2), (2, -2))  # ((x1, y1), (x2, y2)) eg bounding box
+        self._center = (0, 0)
+        self._width = 4
+        self._height = 4
+        self._magnification = 1
+
         self.pixels_per_unit = 231
 
         self.escape_bound = 2
+        self.iterations = 100
 
-        # self.xmin = -2
-        # self.xmax = 2
-        # self.ymin = -2
-        # self.ymax = 2
         self.c = 1
         # self.z = 0
 
@@ -90,23 +93,23 @@ class EscapeTimeFractal(abc.ABC):
         """
         pass
 
-    def calculate_escape_time(self, iterations: int) -> None:
+    def calculate_escape_time(self) -> None:
         """
         Calculates number of iterations for which each point in self.N remains bounded
         :param iterations: int for number of calculation iterations
         :return: None
         """
-        sys.stdout.write(f'Calculating escape time for {self.name} with {iterations} iterations\n')
+        sys.stdout.write(f'Calculating escape time for {self.name} with {self.iterations} iterations\n')
         self.init_complex_plane()
         self.init_calculation_values()
-        for n in range(iterations):
+        for n in range(self.iterations):
             # I: np.array is matrix of Z values that haven't yet escaped
             # apply quadratic_map only to these values
             I = abs(self.Z) < self.escape_bound
             self.quadratic_map(I)
             sys.stdout.write(
-                f'\rProgress: {"#" * int(40 * n / iterations)}{" " * (40 - int(40 * n / iterations))}| '
-                f'{int(100 * n / iterations)}%')
+                f'\rProgress: {"#" * int(40 * n / self.iterations)}{" " * (40 - int(40 * n / self.iterations))}| '
+                f'{int(100 * n / self.iterations)}%')
 
     def render(self, show: bool = True, save_path: str = None):
         plt.axis('off')
@@ -120,7 +123,7 @@ class EscapeTimeFractal(abc.ABC):
                          center: tuple[float, float] = (0., 0.),
                          width: float = 4.,
                          height: float = None,
-                         magnification: int = 1,
+                         magnification: int = None,
                          xy: tuple[tuple[float, float], tuple[float, float]] = None
                          ) -> None:
         """
@@ -135,13 +138,61 @@ class EscapeTimeFractal(abc.ABC):
         if xy is not None:
             assert xy[0][0] < xy[1][0] and xy[0][1] > xy[1][1]
             self._xy = xy
+            self._center = ((xy[0][0] + xy[1][0]) / 2,
+                            (xy[0][1] + xy[1][1]) / 2)
+            self._width = xy[1][0] - xy[0][0]
+            self._height = xy[0][1] - xy[1][1]
+            self._magnification = 4 / self._width
         else:
             if height is None: height = width
+            if magnification is None:
+                magnification = 1
+                self._magnification = 4 / width
             width, height = width / magnification, height / magnification
-            print(width / (2 * magnification))
             x1 = center[0] - width / 2
             y1 = center[1] + height / 2
             self._xy = ((x1, y1), (x1 + width, y1 - height))
+            self._center = center
+            self._width = width
+            self._height = height
+
+    @property
+    def params(self) -> dict:
+        return {
+            'name': self.name,
+            'xy': self._xy,
+            'center': self._center,
+            'width': self._width,
+            'height': self._height,
+            'magnification': self._magnification,
+            'pixels_per_unit': self.pixels_per_unit,
+            'escape_bound': self.escape_bound,
+            'iterations': self.iterations,
+            'c': self.c,
+            # self.z = 0
+            'color_map': self.color_map,
+            'interpolation': self.interpolation
+        }
+
+    def export_params(self, path: str):
+        with open(path, 'w') as f:
+            f.write(json.dumps(self.params, indent=4))
+
+    def import_params(self, path: str):
+        with open(path, 'r') as f:
+            params = json.loads(f.read())
+
+        self._xy = params['xy']
+        self._center = params['center']
+        self._width = params['width']
+        self._height = params['height']
+        self._magnification = params['magnification']
+        self.pixels_per_unit = params['pixels_per_unit']
+        self.escape_bound = params['escape_bound']
+        self.iterations = params['iterations']
+        self.c = params['c']
+        self.color_map = params['color_map']
+        self.interpolation = params['interpolation']
 
 
 class MandelbrotSet(EscapeTimeFractal):
@@ -190,7 +241,7 @@ class BurningShipSet(EscapeTimeFractal):
 if __name__ == '__main__':
     # Mandelbrot Misiurewicz point
     f = MandelbrotSet()
-    f.set_bounding_box(center=(-0.743030, 0.126433), width=0.016110) #, magnification=500)
+    # f.set_bounding_box(center=(-0.743030, 0.126433), width=0.016110) #, magnification=500)
 
     # f = JuliaSet()
     # f.c = complex(-0.835, -0.2321)
@@ -198,6 +249,10 @@ if __name__ == '__main__':
     # f = BurningShipSet()
     # f.set_bounding_box(center=(-1.7, 0), width=0.3, height=0.3)
 
-    f.pixels_per_unit = 500
-    f.calculate_escape_time(1000)
+    # f.pixels_per_unit = 500
+    # f.iterations = 1000
+    # f.export_params('/Users/abrefeld/Desktop/fractest.json')
+    f.import_params('/Users/abrefeld/Desktop/fractest.json')
+    print(f.params)
+    f.calculate_escape_time()
     f.render()
